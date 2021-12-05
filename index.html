@@ -1,0 +1,114 @@
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.0.16/svg.min.js"></script>
+    <script src="js/render_flip_12.js"></script>
+    <script src="js/render_flip_6.js"></script>
+    <script src="js/render_flip_6_2.js"></script>
+    <script src="js/render_rotate_120.js"></script>
+    <script src="js/render_rotate_180.js"></script>
+    <script src="js/render_rotate_60.js"></script>
+</head>
+
+<body>
+    <input id="fileinput" type="file" accept=".jpg,.jpeg,.png,.svg" />
+    <br>
+    <br>
+    <button id="btn1" onclick="setRenderer(render_rotate_180)"> <img src="img/a.png" /> </button>
+    <button id="btn2" onclick="setRenderer(render_rotate_120)"> <img src="img/b.png" /> </button>
+    <button id="btn3" onclick="setRenderer(render_rotate_60)"> <img src="img/c.png" /> </button>
+    <button id="btn4" onclick="setRenderer(render_flip_12)"> <img src="img/d.png" /> </button>
+    <button id="btn5" onclick="setRenderer(render_flip_6)"> <img src="img/e.png" /> </button>
+    <button id="btn6" onclick="setRenderer(render_flip_6_2)"> <img src="img/f.png" /> </button>
+    <br>
+    <p>選擇相片檔案後，將前兩個紅色圓點拖到中間即可，有時會用到第三點。可用大按鈕切換對稱模式。
+    </p>
+    <br>
+    <svg id="mainsvg">
+        <g id="g5"></g>
+        <g id="g4"></g>
+        <g id="g3"></g>
+        <g id="g2"></g>
+        <g id="g1"></g>
+    </svg>
+    <script>
+
+        var mainsvg = SVG("#mainsvg");
+        var g1 = SVG("#g1");
+        var g2 = SVG("#g2");
+        var g3 = SVG("#g3");
+        var g4 = SVG("#g4");
+        var g5 = SVG("#g5");
+        var totalWidth = mainsvg.node.style.width = window.innerWidth - 40;
+        var totalHeight = mainsvg.node.style.height = window.innerHeight;
+        document.querySelector("#fileinput").addEventListener("change", fileSelected);
+
+        var handles = [0, 1, 2].map((e) => g1.circle(20)
+            .translate(-10, -10)
+            .move(totalWidth / 2, 20 * e + 10)
+            .fill({ r: 240 - e * 60, g: 0, b: 102 })
+            .attr({ isDraggable: "true" }));
+
+        var currentDrag = -1;
+        var imageg = g3.group();
+
+        var path = g3
+            .polygon("-10,-10 -11,-11 -11,-10")
+            .fill("#000000")
+            .stroke("#000");
+        var pathIndicator = g2.polygon("-10,-10 -11,-11 -11,-10")
+            .fill("none")
+            .stroke({ color: '#000', opacity: 0.6, width: 10 });
+        var clip = g3.clip().add(path);
+
+        currentRenderer = render_rotate_60;
+        function mouseMove(e) {
+            if (currentDrag == -1) return;
+            currentDrag.move(e.offsetX, e.offsetY);
+            currentRenderer();
+        }
+        function setRenderer(f) {
+            currentRenderer = f;
+            f();
+        }
+
+        document.querySelector("#mainsvg")
+            .addEventListener("mousedown", function (e) {
+                if (e.target.getAttribute("isDraggable") != "true") return;
+                currentDrag = SVG(e.target);
+            });
+        document.querySelector("#mainsvg")
+            .addEventListener("mouseup", () => { currentDrag = -1; });
+        document.querySelector("#mainsvg")
+            .addEventListener("mousemove", mouseMove);
+
+        var useList = [];
+        function fileSelected(files) {
+            if (imageg != 0) {
+                imageg.clear();
+                g5.clear();
+                var list = SVG.find('use')
+                list.remove();
+                useList = [];
+            }
+            var imagegg = imageg.group();
+            imagegg.image(URL.createObjectURL(this.files[0]), function (e) {
+                var scaleRatio = parseInt(totalHeight) / e.target.height * 0.6;
+                var padX = (totalWidth / scaleRatio - e.target.width) / 2
+                var padY = (totalHeight / scaleRatio - e.target.height) / 2
+                imagegg.scale(scaleRatio, scaleRatio, 0, 0).dx(padX).dy(padY)
+                imagegg.clone().opacity(0.2).addTo(g5)
+                imageg.clipWith(clip);
+                for (var i = 0; i < 204; i++) {
+                    useList.push(g4.use(imageg));
+                }
+            });
+
+        }
+
+        var sin60 = Math.sqrt(3) / 2;
+
+    </script>
+</body>
+
+</html>
