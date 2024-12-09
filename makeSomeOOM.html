@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>嘗試耗盡 safari 記憶體</title>
+</head>
+
+<body style="text-align: center; margin-top: 50px;">
+    <h1>嘗試耗盡 safari 記憶體</h1>
+    <button onclick="causeOOM()">Start</button>
+    <div id="message" style="color: red;margin-top: 20px;"></div>
+
+    <script>
+        function causeOOM() {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = "";
+            try {
+                // 指數 2^n 塞爆快很多，但也可能 allocate 失敗時只消耗 51% 記憶體
+                // 所以... 用費氏數列降低底數為 1.6^n
+                let a = ["1"];
+                let b = ["1"];
+                let c = ["1"];
+                while (true) {
+                    c = [...b, ...a];
+                    a = [...c, ...b];
+                    b = [...a, ...c];
+                }
+            } catch (error) {
+                messageElement.textContent = "Caught an error: " + error.message;
+            }
+        }
+    </script>
+</body>
+
+</html>
